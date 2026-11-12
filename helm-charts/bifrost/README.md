@@ -14,6 +14,7 @@ Official Helm charts for deploying [Bifrost](https://github.com/maximhq/bifrost)
 - Added `serviceMonitor.basicAuth` and `serviceMonitor.authorization` to authenticate the scrape when auth is enabled. `basicAuth` inherits the Secret and keys of the active `bifrost.governance.authConfig` or `bifrost.authConfig`; rendering fails if no Secret can be resolved.
 - `serviceMonitor.enabled: true` is refused at render time when `bifrost.plugins.telemetry.config.metrics_enabled` is `false`, since `/metrics` would return `404`.
 - Added the `app.kubernetes.io/component: server` label to the primary `Service` so the `ServiceMonitor` does not also scrape the SQLite headless service.
+- Added `bifrost.client.mcpClientMetadataUrl` (`client.mcp_client_metadata_url`): where you host Bifrost's Client ID Metadata Document, for MCP servers that cannot reach Bifrost. Unset, the document is served under `mcpExternalClientUrl`.
 
 ### 2.1.48
 
