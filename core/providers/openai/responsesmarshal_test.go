@@ -2534,6 +2534,40 @@ func TestToOpenAIResponsesRequest_RequestLevelCacheTTL(t *testing.T) {
 	}
 }
 
+// TestToOpenAIResponsesRequest_PreGPT56DropsPromptCacheOptions pins that OpenAI and
+// Azure drop prompt_cache_options below gpt-5.6, the first generation documented to
+// accept it; earlier models reject the request with a 400.
+func TestToOpenAIResponsesRequest_PreGPT56DropsPromptCacheOptions(t *testing.T) {
+	for _, tc := range []struct {
+		provider schemas.ModelProvider
+		model    string
+		keep     bool
+	}{
+		{schemas.OpenAI, "gpt-5-mini", false},
+		{schemas.OpenAI, "gpt-5.5", false},
+		{schemas.Azure, "gpt-4o", false},
+		{schemas.OpenAI, "gpt-5.6-luna", true},
+		{schemas.Azure, "gpt-6-luna", true},
+	} {
+		t.Run(string(tc.provider)+"/"+tc.model, func(t *testing.T) {
+			opts := &schemas.PromptCacheOptions{Mode: new("implicit")}
+			req := &schemas.BifrostResponsesRequest{
+				Provider: tc.provider,
+				Model:    tc.model,
+				Input:    []schemas.ResponsesMessage{{Role: new(schemas.ResponsesInputMessageRoleUser), Content: &schemas.ResponsesMessageContent{ContentStr: new("hi")}}},
+				Params:   &schemas.ResponsesParameters{PromptCacheOptions: opts},
+			}
+			_, raw := marshalResponses(t, req)
+			if got := gjson.Get(raw, "prompt_cache_options").Exists(); got != tc.keep {
+				t.Errorf("prompt_cache_options present = %v, want %v; raw=%s", got, tc.keep, raw)
+			}
+			if req.Params.PromptCacheOptions != opts {
+				t.Error("caller PromptCacheOptions must not be mutated")
+			}
+		})
+	}
+}
+
 // TestToOpenAIResponsesRequest_PreGPT56Unaffected pins the negative. Earlier OpenAI
 // models have no prompt_cache_breakpoint field at all, so translating into it would
 // send an unknown key; the serializer's existing strip is the right behaviour there.

@@ -1136,6 +1136,25 @@ func TestToOpenAIChatRequest_PromptCacheOptions(t *testing.T) {
 	if fw == nil || fw.ChatParameters.PromptCacheOptions != nil {
 		t.Fatalf("expected prompt_cache_options stripped for Fireworks, got %#v", fw.ChatParameters.PromptCacheOptions)
 	}
+
+	// OpenAI documents the field for gpt-5.6 and later only; earlier models 400 on it.
+	for _, tc := range []struct {
+		provider schemas.ModelProvider
+		model    string
+	}{
+		{schemas.OpenAI, "gpt-5-mini"},
+		{schemas.OpenAI, "gpt-5.5"},
+		{schemas.Azure, "gpt-4o"},
+	} {
+		req := mkReq(tc.provider, tc.model)
+		out := ToOpenAIChatRequest(ctx, req)
+		if out == nil || out.ChatParameters.PromptCacheOptions != nil {
+			t.Errorf("%s/%s: expected prompt_cache_options stripped, got %#v", tc.provider, tc.model, out.ChatParameters.PromptCacheOptions)
+		}
+		if req.Params.PromptCacheOptions == nil {
+			t.Errorf("%s/%s: caller params must not be mutated", tc.provider, tc.model)
+		}
+	}
 }
 
 func TestToOpenAIChatRequest_FireworksPreservesReasoningAndCacheIsolation(t *testing.T) {

@@ -154,6 +154,10 @@ func ToOpenAIChatRequest(ctx *schemas.BifrostContext, bifrostReq *schemas.Bifros
 	case schemas.OpenAI, schemas.Azure:
 		openaiReq.normalizeReasoningEffort(caps)
 		openaiReq.stripUnsupportedSamplingParams(caps)
+		// prompt_cache_options is gpt-5.6+ only; earlier models 400 on it.
+		if !caps.SupportsPromptCacheBreakpoint(schemas.ModelSupportsPromptCacheBreakpoint(capModel)) {
+			openaiReq.ChatParameters.PromptCacheOptions = nil
+		}
 		// URL-sourced documents are NOT inlined here. Chat Completions rejects file_url, so they
 		// still have to be resolved before the request goes out - but that is a network fetch that
 		// can fail, and this function has no way to report a failure. Callers invoke

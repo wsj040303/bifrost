@@ -1198,6 +1198,10 @@ func ToOpenAIResponsesRequest(ctx *schemas.BifrostContext, bifrostReq *schemas.B
 		}
 		// Only OpenAI hosts gate these; third-party gpt-oss hosts accept them.
 		if base := schemas.ResolveBaseProvider(ctx, bifrostReq.Provider); base == schemas.OpenAI || base == schemas.Azure {
+			// prompt_cache_options is gpt-5.6+ only; earlier models 400 on it.
+			if !caps.SupportsPromptCacheBreakpoint(schemas.ModelSupportsPromptCacheBreakpoint(capModel)) {
+				req.PromptCacheOptions = nil
+			}
 			if samplingParamUnsupported(caps, schemas.FieldTemperature, capModel, effort) {
 				req.ResponsesParameters.Temperature = nil
 			}
