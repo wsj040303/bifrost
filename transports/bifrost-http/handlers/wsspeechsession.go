@@ -60,6 +60,8 @@ func NewWSSpeechSessionHandler(client *bifrost.Bifrost, config *lib.Config, pool
 // RegisterRoutes registers the speech session endpoint.
 func (h *WSSpeechSessionHandler) RegisterRoutes(r *router.Router, middlewares ...schemas.BifrostHTTPMiddleware) {
 	r.GET("/v1/audio/speech/stream", lib.ChainMiddlewares(h.handleUpgrade, middlewares...))
+	// An ElevenLabs client's text-to-dialogue socket, on the /elevenlabs base URL its SDK is given.
+	r.GET(elevenlabsDialoguePath, lib.ChainMiddlewares(h.handleElevenlabsDialogueUpgrade, middlewares...))
 }
 
 // Close closes active speech sessions.

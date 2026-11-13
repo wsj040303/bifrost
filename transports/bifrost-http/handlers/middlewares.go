@@ -1385,7 +1385,8 @@ func isInferenceWSEndpoint(path string) bool {
 		"/responses",
 		"/v1/realtime",
 		"/realtime",
-		"/v1/audio/speech/stream":
+		"/v1/audio/speech/stream",
+		elevenlabsDialoguePath:
 		return true
 	default:
 		return false
@@ -1412,6 +1413,7 @@ func buildRealtimeTransportPathSet() map[string]struct{} {
 	for _, path := range integrations.GenAIVertexRealtimePaths("/genai") {
 		paths[path] = struct{}{}
 	}
+	paths[elevenlabsScribePath] = struct{}{}
 	return paths
 }
 
